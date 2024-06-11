@@ -5,6 +5,8 @@ import 'package:mds_flutter_app/services/http_service.dart';
 import 'package:mds_flutter_app/models/character.dart';
 import 'package:mds_flutter_app/models/chat.dart';
 
+/// Displays the list of chats
+/// It allows to access the conversations
 class ChatsView extends StatefulWidget {
   const ChatsView({super.key});
   @override

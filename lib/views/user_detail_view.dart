@@ -3,8 +3,10 @@ import 'package:mds_flutter_app/common/button.dart';
 import 'package:mds_flutter_app/common/input.dart';
 import 'package:mds_flutter_app/main.dart';
 import 'package:mds_flutter_app/models/user.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mds_flutter_app/services/utils.dart';
 
+/// The view for the user detail page
+/// The user can see his own profile and edit his informations
 class UserDetailView extends StatefulWidget {
   const UserDetailView({super.key});
 
@@ -21,13 +23,38 @@ class _UserDetailViewState extends State<UserDetailView> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _userNameController = TextEditingController();
 
+  /// Get the user object from the API
   Future<User> _getUser(int userId) async {
     User user = await User.getUser(userId);
     return user;
   }
 
-  Widget _displayUserPicture() {
-    // Display the top part of the screen containing the blue container with user picture
+  /// Update the user object with the new values
+  Future<void> _updateUser() async {
+    try {
+      User updatedUser = await User.updateUser(_user!.id!, {
+        "username": _userNameController.text,
+        "firstname": _firstNameController.text,
+        "lastname": _lastNameController.text,
+        "email": _emailController.text,
+      });
+      // Update the user object and display a success message
+      setState(() => _user = updatedUser);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Informations modifiées avec succès", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+        backgroundColor: Colors.green,
+      ));
+    } catch (e) {
+      // Display an error message if the update failed
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Erreur lors de la modification des informations", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+        backgroundColor: Colors.red,
+      ));
+    }
+  }
+
+  /// Display the user header with the user icon
+  Widget _displayUserHeader() {
     return Container(
         color: primaryColor,
         width: double.infinity,
@@ -69,13 +96,13 @@ class _UserDetailViewState extends State<UserDetailView> {
         ),
         const SizedBox(height: 16),
         Input(
-          controller: _emailController, // controller
+          controller: _emailController,
           hintText: "Email",
           isPassword: false,
         ),
         const SizedBox(height: 16),
         Input(
-          controller: _firstNameController, // controller
+          controller: _firstNameController,
           hintText: "Prénom",
           isPassword: false,
         ),
@@ -89,20 +116,7 @@ class _UserDetailViewState extends State<UserDetailView> {
         Button(
             onPressed: () async {
               Navigator.pop(context);
-              try {
-                User updatedUser = await User.updateUser(_user!.id!, {
-                  "username": _userNameController.text,
-                  "firstname": _firstNameController.text,
-                  "lastname": _lastNameController.text,
-                  "email": _emailController.text,
-                });
-                setState(() => _user = updatedUser);
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text("Erreur lors de la modification des informations", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
-                  backgroundColor: Colors.red,
-                ));
-              }
+              await _updateUser();
             },
             text: "Modifier les informations")
       ],
@@ -174,7 +188,7 @@ class _UserDetailViewState extends State<UserDetailView> {
     // Return the main layout of the screen divided in two parts
     return Column(
       children: <Widget>[
-        Expanded(flex: 1, child: _displayUserPicture()),
+        Expanded(flex: 1, child: _displayUserHeader()),
         const SizedBox(height: 60),
         Expanded(flex: 3, child: _displayUserInfo(userId)),
       ],
@@ -183,9 +197,7 @@ class _UserDetailViewState extends State<UserDetailView> {
 
   Future<void> _loadUser(int userId) async {
     // Load the user object that will be displayed on this view
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    _myId = prefs.getInt('id');
-
+    _myId = await Token.getId();
     User user = await _getUser(userId);
 
     _emailController.text = user.email;
@@ -196,11 +208,12 @@ class _UserDetailViewState extends State<UserDetailView> {
     setState(() => _user = user);
   }
 
+  /// Get the user object from the API & display the user picture and info
   @override
   Widget build(BuildContext context) {
     final int userId = ModalRoute.of(context)!.settings.arguments as int;
     if (_user == null) {
-      _loadUser(userId); // Load user object if still null
+      _loadUser(userId);
     }
 
     return Scaffold(

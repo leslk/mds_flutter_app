@@ -6,6 +6,8 @@ import 'package:mds_flutter_app/views/chats_view.dart';
 import 'package:mds_flutter_app/services/utils.dart';
 import 'package:mds_flutter_app/common/main_title.dart';
 
+/// The view for the home page
+/// The user can navigate to the users, universes and chats pages
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 

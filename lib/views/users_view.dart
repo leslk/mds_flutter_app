@@ -5,6 +5,9 @@ import 'package:mds_flutter_app/common/main_title.dart';
 import 'package:mds_flutter_app/models/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// The view for the users page
+/// The user can see the list of all users
+/// and search for a specific user
 class UsersView extends StatefulWidget {
   const UsersView({super.key});
 
@@ -16,6 +19,9 @@ class _UsersViewState extends State<UsersView> {
   final TextEditingController _searchController = TextEditingController();
   int? _myId;
 
+  /// At the initialization get the userid from the shared preferences
+  /// and set it to the _myId variable
+  /// and set the listener to the search controller
   @override
   void initState() {
     super.initState();
@@ -25,12 +31,14 @@ class _UsersViewState extends State<UsersView> {
     _searchController.addListener(() => setState(() {}));
   }
 
+  /// When the widget is disposed, dispose the search controller
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
+  /// Return a list of users sorted by username with the current user on top
   List<User> _getSortedUsers(List<User> users) {
     // Return a given list of users with main user on top
     if (_myId == null) return users;
@@ -45,6 +53,7 @@ class _UsersViewState extends State<UsersView> {
     return users;
   }
 
+  /// Return a list of users filtered by search query
   List<User> _getFilteredUsers(List<User> users) {
     String query = _searchController.text.toLowerCase();
     if (query.isEmpty) {
@@ -57,6 +66,7 @@ class _UsersViewState extends State<UsersView> {
     }
   }
 
+  /// Return a card containing user information
   Card _displayUserCard(User user) {
     return Card(
       color: lightGrey,
@@ -75,6 +85,7 @@ class _UsersViewState extends State<UsersView> {
     );
   }
 
+  /// Return a future builder displaying the list of users
   FutureBuilder _displayUserList() {
     return FutureBuilder<List<User>>(
       future: User.getUsers(),

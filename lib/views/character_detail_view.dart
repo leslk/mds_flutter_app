@@ -114,19 +114,37 @@ class _CharacterDetailViewState extends State<CharacterDetailView> {
     );
   }
 
-  Widget _displayCreateChatButton() {
+  Widget _displayCreateChatButton(int characterId) {
     // Display the chat button in the app bar
     return IconButton(
       icon: const Icon(Icons.chat),
       onPressed: () async {
-        try {
-          Chat chat = await _createChat();
-          Navigator.pushNamed(arguments: chat.id, context, '/conversations/:id');
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("Erreur lors de la création de la conversation", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
-            backgroundColor: Colors.red,
-          ));
+        // Check if a conversation is already exisiting with this character
+        Chat? existingChat;
+        List<Chat> chats = await Chat.getChats();
+        for (Chat chat in chats) {
+          if (chat.characterId == characterId) {
+            existingChat = chat;
+            break;
+          }
+        }
+
+        if (existingChat != null) {
+          // If a chat is already existing, redirect to it:
+          Navigator.pushNamed(arguments: existingChat.id, context, '/conversations/:id');
+        } else {
+          // Else if there is no current conversation with this character, create
+          // a new one and redirect to it:
+          try {
+            Chat chat = await _createChat();
+            Navigator.pushNamed(arguments: chat.id, context, '/conversations/:id');
+          } catch (e) {
+            // Handle server error on creating this new conversation
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("Erreur lors de la création de la conversation", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+              backgroundColor: Colors.red,
+            ));
+          }
         }
       },
     );
@@ -152,7 +170,7 @@ class _CharacterDetailViewState extends State<CharacterDetailView> {
       appBar: AppBar(
           title: Text(_character != null ? _character!.name : "Character"),
           actions: [
-            _displayCreateChatButton(),
+            _displayCreateChatButton(characterId),
           ],
           centerTitle: true,
           backgroundColor: Colors.white,

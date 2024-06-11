@@ -4,46 +4,31 @@ import 'package:mds_flutter_app/views/login_view.dart';
 import 'package:mds_flutter_app/services/utils.dart';
 import 'dart:async';
 
-class LoginCheckerView extends StatefulWidget {
+class LoginCheckerView extends StatelessWidget {
   const LoginCheckerView({super.key});
 
-  @override
-  State<LoginCheckerView> createState() => _LoginCheckerViewState();
-}
-
-class _LoginCheckerViewState extends State<LoginCheckerView> {
-  late StreamController<bool> _streamController;
-  late Timer _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _streamController = StreamController<bool>();
-    _startTokenCheck();
+  /// This stream allows us to check if the token is in shared preferences, expired or still valid.
+  Stream<bool> _checkTokenStream() async* {
+    while (true) {
+      String? token = await Token.getToken();
+      if (token == null) {
+        yield false;
+      } else if (Token.isExpired(token)) {
+        Token.removeToken();
+        yield false;
+      } else {
+        yield true;
+      }
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
   }
 
-  @override
-  void dispose() {
-    _streamController.close();
-    _timer.cancel();
-    super.dispose();
-  }
-
-  void _startTokenCheck() async {
-    var token = await Token.getToken();
-    bool? isLogin = token != null;
-    _streamController.add(isLogin);
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      token = await Token.getToken();
-      bool? isLogin = token != null;
-      _streamController.add(isLogin);
-    });
-  }
-
+  /// In the build method, we are using the StreamBuilder to check if the user is logged in or not.
+  /// If the user is logged in, we will show the HomeView, otherwise we will show the LoginView.
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-        stream: _streamController.stream,
+        stream: _checkTokenStream(),
         builder: (BuildContext context, AsyncSnapshot<bool> isLogged) {
           if (isLogged.hasData) {
             if (isLogged.data! && isLogged.data == true) {

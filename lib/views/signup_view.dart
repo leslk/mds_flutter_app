@@ -4,6 +4,8 @@ import 'package:mds_flutter_app/common/input.dart';
 import 'package:mds_flutter_app/common/main_title.dart';
 import 'package:mds_flutter_app/models/user.dart';
 
+/// The view for the signup page
+/// The user can signup with his pseudo, name, firstname, email and password
 class SignupView extends StatefulWidget {
   const SignupView({super.key});
 
@@ -19,6 +21,23 @@ class _SignupViewState extends State<SignupView> {
   final TextEditingController _confirmPasswordController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   String _signupErrorMesssage = "";
+
+  Future<void> _signup() async {
+    try {
+      await User.signup(
+        _pseudoController.text,
+        _nameController.text,
+        _firstNameController.text,
+        _emailController.text,
+        _passwordController.text,
+      );
+    } catch (e) {
+      setState(() {
+        _signupErrorMesssage = e.toString().split("Exception: ")[1];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,20 +102,7 @@ class _SignupViewState extends State<SignupView> {
                   Button(
                     text: "S'inscrire",
                     onPressed: () async {
-                      try {
-                        await User.signup(
-                          _pseudoController.text,
-                          _nameController.text,
-                          _firstNameController.text,
-                          _emailController.text,
-                          _passwordController.text,
-                        );
-                      } on Exception catch (e) {
-                        setState(() {
-                          _signupErrorMesssage = e.toString();
-                        });
-                        return;
-                      }
+                      await _signup();
                     },
                   ),
                   const SizedBox(height: 10),

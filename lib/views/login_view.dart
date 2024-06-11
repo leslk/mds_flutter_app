@@ -4,6 +4,8 @@ import 'package:mds_flutter_app/common/input.dart';
 import 'package:mds_flutter_app/common/main_title.dart';
 import 'package:mds_flutter_app/models/user.dart';
 
+/// The view for the login page
+/// The user can login with his pseudo and password
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
@@ -15,6 +17,18 @@ class _LoginViewState extends State<LoginView> {
   final TextEditingController _pseudoController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String _loginErrorMesssage = "";
+
+  /// Login the user with the given pseudo and password
+  Future<void> _login() async {
+    try {
+      await User.login(_pseudoController.text, _passwordController.text);
+    } catch (e) {
+      setState(() {
+        _loginErrorMesssage = e.toString().split("Exception: ")[1];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,13 +57,7 @@ class _LoginViewState extends State<LoginView> {
                 Button(
                   text: "Se connecter",
                   onPressed: () async {
-                    try {
-                      await User.login(_pseudoController.text, _passwordController.text);
-                    } on Exception catch (e) {
-                      setState(() {
-                        _loginErrorMesssage = e.toString();
-                      });
-                    }
+                    await _login();
                   },
                 ),
                 const SizedBox(height: 10),

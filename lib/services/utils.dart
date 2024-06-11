@@ -36,4 +36,16 @@ class Token {
     SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setInt('id', id);
   }
+
+  static bool isExpired(String token) {
+    var parts = token.split('.');
+    var payload = parts[1];
+    var normalized = base64Url.normalize(payload);
+    var resp = utf8.decode(base64Url.decode(normalized));
+    const JsonDecoder decoder = JsonDecoder();
+    Map<String, dynamic> tokenMap = decoder.convert(resp);
+    var exp = tokenMap["exp"];
+    var now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    return now > exp;
+  }
 }

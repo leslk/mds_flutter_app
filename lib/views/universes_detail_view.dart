@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mds_flutter_app/common/button.dart';
 import 'package:mds_flutter_app/common/input.dart';
@@ -6,6 +8,8 @@ import 'package:mds_flutter_app/main.dart';
 import 'package:mds_flutter_app/models/universe.dart';
 import 'package:mds_flutter_app/services/http_service.dart';
 
+/// View that displays the details of a universe
+/// It allows to edit the universe name
 class UniverseDetailView extends StatefulWidget {
   const UniverseDetailView({super.key});
 
@@ -19,9 +23,30 @@ class _UniverseDetailViewState extends State<UniverseDetailView> {
 
   final TextEditingController _nameController = TextEditingController();
 
+  /// Get the universe with the given id
   Future<Universe> _getUniverse(int universeId) async {
     Universe universe = await Universe.getUniverse(universeId);
     return universe;
+  }
+
+  /// Update the universe with the given data
+  Future<void> _updateUniverse(int universeId, Map<String, dynamic> data) async {
+    try {
+      Universe universe = await Universe.updateUniverse(universeId, data);
+      setState(() {
+        _universe = universe;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Univers modifié avec succès", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+        backgroundColor: Colors.green,
+      ));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Erreur lors de la modification de l'univers", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+        backgroundColor: Colors.red,
+      ));
+      rethrow;
+    }
   }
 
   Widget _displayUniversePicture() {
@@ -59,16 +84,7 @@ class _UniverseDetailViewState extends State<UniverseDetailView> {
         Button(
             onPressed: () async {
               Navigator.pop(context);
-              try {
-                // call the update universe method
-                Universe updatedUniverse = await Universe.updateUniverse(_universe!.id!, {"name": _nameController.text});
-                setState(() => _universe = updatedUniverse);
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text("Erreur lors de la modification de l'univers", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
-                  backgroundColor: Colors.red,
-                ));
-              }
+              await _updateUniverse(_universe!.id!, {"name": _nameController.text});
             },
             text: "Modifier les informations")
       ],
@@ -92,76 +108,16 @@ class _UniverseDetailViewState extends State<UniverseDetailView> {
     );
   }
 
-  Dialog _displayDeleteUniverseDialog() {
-    // Return the content of the bottom sheet modal when deleting the universe
-    return Dialog(
-      insetPadding: const EdgeInsets.all(10),
-      alignment: Alignment.bottomCenter,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(30)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Container(
-            width: double.infinity,
-            color: Colors.white,
-            child: Column(
-              children: [
-                const Text(
-                  "Êtes-vous sûr de vouloir supprimer cet univers ?",
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Button(
-                    color: Colors.red,
-                    onPressed: () async {
-                      try {
-                        await Universe.deleteUniverse(_universe!.id!);
-                        Navigator.pushNamed(context, '/universes');
-                      } catch (e) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text("Erreur lors de la suppression de l'univers", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
-                          backgroundColor: Colors.red,
-                        ));
-                      }
-                    },
-                    text: "Supprimer l'univers"),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _displayEditInfoButton() {
     // Return the pen button that allows the universe to be edited
     return IconButton(
-      icon: const Icon(Icons.edit, color: primaryColor),
+      icon: const Icon(Icons.edit, color: Colors.white),
       onPressed: () async {
         // show dialod with full width in the bottom of the screen
         await showDialog(
           context: context,
           builder: (BuildContext context) {
             return _displayProfileEditionDialog();
-          },
-        );
-      },
-    );
-  }
-
-  Widget _displayDeleteUniverseButton() {
-    // Return the trash button that allows the universe to be deleted
-    return IconButton(
-      icon: const Icon(Icons.delete, color: primaryColor),
-      onPressed: () async {
-        // show dialod with full width in the bottom of the screen
-        await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return _displayDeleteUniverseDialog();
           },
         );
       },
@@ -227,7 +183,7 @@ class _UniverseDetailViewState extends State<UniverseDetailView> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_universe != null ? _universe!.name : "", style: const TextStyle(fontWeight: FontWeight.bold)),
-        actions: [_displayEditInfoButton(), _displayDeleteUniverseButton()],
+        actions: [_displayEditInfoButton()],
         centerTitle: true,
         backgroundColor: primaryColor,
         iconTheme: const IconThemeData(color: Colors.white),

@@ -16,7 +16,7 @@ class UsersView extends StatefulWidget {
 }
 
 class _UsersViewState extends State<UsersView> {
-  final TextEditingController _searchController = TextEditingController();
+  late TextEditingController _searchController;
   int? _myId;
 
   /// At the initialization get the userid from the shared preferences
@@ -25,6 +25,7 @@ class _UsersViewState extends State<UsersView> {
   @override
   void initState() {
     super.initState();
+    _searchController = TextEditingController();
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
       setState(() => _myId = prefs.getInt("id"));
     });
@@ -42,6 +43,9 @@ class _UsersViewState extends State<UsersView> {
   List<User> _getSortedUsers(List<User> users) {
     // Return a given list of users with main user on top
     if (_myId == null) return users;
+
+    // Sort users by username
+    users.sort((a, b) => a.username.toLowerCase().compareTo(b.username.toLowerCase()));
 
     // Try to find current user and put it to the top of the list
     for (int i = 0; i < users.length; i++) {
@@ -79,8 +83,9 @@ class _UsersViewState extends State<UsersView> {
           ),
           title: Text(user.username, style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(user.email),
-          onTap: () {
-            Navigator.pushNamed(arguments: user.id, context, '/users/:id');
+          onTap: () async {
+            await Navigator.pushNamed(arguments: user.id, context, '/users/:id');
+            setState(() {});
           }),
     );
   }

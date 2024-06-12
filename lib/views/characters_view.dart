@@ -4,7 +4,10 @@ import 'package:mds_flutter_app/common/main_title.dart';
 import 'package:mds_flutter_app/main.dart';
 import 'package:mds_flutter_app/services/http_service.dart';
 import 'package:mds_flutter_app/models/character.dart';
+import 'package:mds_flutter_app/common/button.dart';
+import 'package:mds_flutter_app/common/text_input_modal.dart';
 
+/// Displays the list of characters
 class CharactersView extends StatefulWidget {
   const CharactersView({super.key});
   @override
@@ -15,6 +18,31 @@ class _CharactersViewState extends State<CharactersView> {
   final HttpService httpService = HttpService();
   bool _isLoading = false;
 
+  /// Create a character with the given name
+  Future<void> _createCharacter(int universeId, String name) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      await Character.createCharacter(universeId, {"name": name});
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Personnage créé avec succès", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+        backgroundColor: Colors.green,
+      ));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Erreur lors de la création du personnage", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+        backgroundColor: Colors.red,
+      ));
+      rethrow;
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// Display the character image
   Widget _displayCharacterImage(Character character) {
     return Container(
       width: 40,
@@ -48,6 +76,7 @@ class _CharactersViewState extends State<CharactersView> {
     );
   }
 
+  /// Display the card of the character
   Card _displayCharacterCard(Character character, int universeId) {
     return Card(
       color: lightGrey,
@@ -62,46 +91,19 @@ class _CharactersViewState extends State<CharactersView> {
     );
   }
 
-  Dialog _displayCreateCharacterDialog(int universeId) {
-    final TextEditingController nameController = TextEditingController();
-
-    return Dialog(
-      insetPadding: const EdgeInsets.all(10),
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 16),
-            Input(controller: nameController, hintText: "Nom du personnage", isPassword: false),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                setState(() {
-                  _isLoading = true;
-                });
-                try {
-                  await Character.createCharacter(universeId, {"name": nameController.text});
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Erreur lors de la création du personnage"),
-                  ));
-                } finally {
-                  setState(() {
-                    _isLoading = false;
-                  });
-                }
-              },
-              child: const Text("Créer le personnage"),
-            ),
-          ],
-        ),
-      ),
+  /// Display the dialog to create a character
+  Widget _displayCreateCharacterDialog(int universeId) {
+    return TextInputModal(
+      buttonText: "Créer le personnage",
+      hintText: "Nom du personnage",
+      value: "",
+      onConfirm: (String value) async {
+        await _createCharacter(universeId, value);
+      },
     );
   }
 
+  /// Display the list of characters
   FutureBuilder _displayCharacterList(universeId) {
     return FutureBuilder<List<Character>>(
       future: Character.getCharacters(universeId),

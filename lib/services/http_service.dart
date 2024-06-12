@@ -32,8 +32,8 @@ class HttpService {
   }
 
   Future<void> signup(Map userData) async {
-    //remove id from user
     http.Response res = await http.post(Uri.parse('$apiUrl/users'), body: jsonEncode(userData));
+
     switch (res.statusCode) {
       case 201:
         break;
@@ -49,17 +49,18 @@ class HttpService {
     http.Response res = await http.get(Uri.parse('$apiUrl/users'), headers: {
       'Authorization': 'Bearer $token',
     });
-    if (res.statusCode == 200) {
-      List<dynamic> body = jsonDecode(res.body);
+    switch (res.statusCode) {
+      case 200:
+        List<dynamic> body = jsonDecode(res.body);
 
-      // Add user objects to a list and return it
-      List<User> users = [];
-      for (Map userData in body) {
-        users.add(User.fromJson(userData));
-      }
-      return users;
-    } else {
-      throw "Can't get users.";
+        // Add user objects to a list and return it
+        List<User> users = [];
+        for (Map userData in body) {
+          users.add(User.fromJson(userData));
+        }
+        return users;
+      default:
+        throw Exception('Une erreur est survenue');
     }
   }
 
@@ -132,19 +133,6 @@ class HttpService {
     switch (res.statusCode) {
       case 200:
         return Universe.fromJson(jsonDecode(res.body));
-      default:
-        throw Exception('Une erreur est survenue');
-    }
-  }
-
-  Future<String> deleteUniverse(int id) async {
-    String? token = await Token.getToken();
-    http.Response res = await http.delete(Uri.parse('$apiUrl/universes/$id'), headers: {
-      'Authorization': 'Bearer $token',
-    });
-    switch (res.statusCode) {
-      case 204:
-        return "L'univers a bien été supprimé";
       default:
         throw Exception('Une erreur est survenue');
     }
@@ -331,8 +319,6 @@ class HttpService {
     String? token = await Token.getToken();
     http.Response res = await http.post(Uri.parse("$apiUrl/conversations/$chatId/messages"), headers: {'Authorization': 'Bearer $token'}, body: jsonEncode({"content": content}));
 
-    print('body ${res.body}');
-    print(res.statusCode);
     switch (res.statusCode) {
       case 201:
         Message message = Message.fromJson(jsonDecode(res.body)["message"]);

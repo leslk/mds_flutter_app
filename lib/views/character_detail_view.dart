@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mds_flutter_app/common/button.dart';
 import 'package:mds_flutter_app/common/main_title.dart';
@@ -57,10 +59,34 @@ class _CharacterDetailViewState extends State<CharacterDetailView> {
         ));
   }
 
-  Future<Chat> _createChat() async {
-    // Create a chat object with the character id
-    Chat chat = await Chat.createChat(_character!.id!);
-    return chat;
+  Future<void> _createChat() async {
+    try {
+      Chat chat = await Chat.createChat(_character!.id!);
+      Navigator.pushNamed(arguments: chat.id, context, '/conversations/:id');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Erreur lors de la création de la conversation", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+        backgroundColor: Colors.red,
+      ));
+    }
+  }
+
+  Future<void> _updateCharacter(int characterId, Map<String, dynamic> data) async {
+    try {
+      Character character = await Character.updateCharacter(_universeId, data);
+      setState(() {
+        _character = character;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Description du personnage modifié avec succès", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+        backgroundColor: Colors.green,
+      ));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Erreur lors de la modification de la description du personnage", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+        backgroundColor: Colors.red,
+      ));
+    }
   }
 
   Widget _displayCharacterInfo(characterId) {
@@ -82,17 +108,7 @@ class _CharacterDetailViewState extends State<CharacterDetailView> {
                 const SizedBox(height: 16),
                 Button(
                     onPressed: () async {
-                      try {
-                        Character updatedCharacter = await Character.updateCharacter(_universeId, {"name": _nameController.text, "id": characterId});
-                        setState(() {
-                          _character = updatedCharacter;
-                        });
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text("Erreur lors de la modification du personnage", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
-                          backgroundColor: Colors.red,
-                        ));
-                      }
+                      await _updateCharacter(characterId, {"description": _character!.description, "id": characterId});
                     },
                     text: "Regénérer la description")
               ],
@@ -135,16 +151,7 @@ class _CharacterDetailViewState extends State<CharacterDetailView> {
         } else {
           // Else if there is no current conversation with this character, create
           // a new one and redirect to it:
-          try {
-            Chat chat = await _createChat();
-            Navigator.pushNamed(arguments: chat.id, context, '/conversations/:id');
-          } catch (e) {
-            // Handle server error on creating this new conversation
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text("Erreur lors de la création de la conversation", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
-              backgroundColor: Colors.red,
-            ));
-          }
+          await _createChat();
         }
       },
     );

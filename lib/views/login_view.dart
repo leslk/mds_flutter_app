@@ -14,9 +14,23 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  final TextEditingController _pseudoController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  late TextEditingController _pseudoController;
+  late TextEditingController _passwordController;
   String _loginErrorMesssage = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _pseudoController = TextEditingController();
+    _passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _pseudoController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   /// Login the user with the given pseudo and password
   Future<void> _login() async {

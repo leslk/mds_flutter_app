@@ -82,12 +82,17 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   /// Send a message to the character
   Future<void> _sendMessage(String content) async {
     try {
-      List<Message> messages = await _chat!.sendMessage(content);
       _messageController.clear();
-      setState(() {
-        _chat!.messages.add(messages[0]);
-        _chat!.messages.add(messages[1]);
-      });
+      List<Message> messages = await _chat!.sendMessage(content);
+      // avoid adding an empty message
+      if (messages[1].content.isEmpty) {
+        messages[1] = await Chat.regenerateMessage(_chat!.id!);
+      } else {
+        setState(() {
+          _chat!.messages.add(messages[0]);
+          _chat!.messages.add(messages[1]);
+        });
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text(
@@ -119,6 +124,31 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text(
           "Erreur lors de la régénération du message",
+          style: TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+        backgroundColor: Colors.red,
+      ));
+    }
+  }
+
+  /// Delete the chat with the given id
+  Future<void> _deleteChat(int chatId) async {
+    try {
+      await Chat.deleteChat(chatId);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+          "Conversation supprimée avec succès",
+          style: TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+        backgroundColor: Colors.green,
+      ));
+      Navigator.of(context).pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+          "Erreur lors de la suppression de la conversation",
           style: TextStyle(color: Colors.white),
           textAlign: TextAlign.center,
         ),
@@ -200,7 +230,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           ),
           IconButton(
             style: ButtonStyle(
-              backgroundColor: !_isWriting ? WidgetStateProperty.all<Color>(primaryColor) : WidgetStateProperty.all<Color>(Colors.grey),
+              backgroundColor: !_isWriting && _messageController.text.isNotEmpty ? WidgetStateProperty.all<Color>(primaryColor) : WidgetStateProperty.all<Color>(Colors.grey),
               iconColor: WidgetStateProperty.all<Color>(Colors.white),
             ),
             icon: const Icon(Icons.arrow_upward),
@@ -307,19 +337,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () async {
-              try {
-                await Chat.deleteChat(chatId);
-                Navigator.of(context).pop("deleted");
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text(
-                    "Erreur lors de la suppression de la conversation",
-                    style: TextStyle(color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
-                  backgroundColor: Colors.red,
-                ));
-              }
+              await _deleteChat(chatId);
             },
           ),
         ],

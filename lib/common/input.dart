@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mds_flutter_app/main.dart';
 
+/// A custom input field that can be used to get user input.
+/// It can be used to get text input or password input.
 class Input extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;

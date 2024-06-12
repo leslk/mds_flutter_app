@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:mds_flutter_app/common/button.dart';
-import 'package:mds_flutter_app/common/input.dart';
 import 'package:mds_flutter_app/common/main_title.dart';
 import 'package:mds_flutter_app/main.dart';
 import 'package:mds_flutter_app/models/universe.dart';
 import 'package:mds_flutter_app/services/http_service.dart';
+import 'package:mds_flutter_app/common/text_input_modal.dart';
 
 /// View that displays the details of a universe
 /// It allows to edit the universe name
@@ -20,8 +20,6 @@ class UniverseDetailView extends StatefulWidget {
 class _UniverseDetailViewState extends State<UniverseDetailView> {
   Universe? _universe;
   HttpService httpService = HttpService();
-
-  final TextEditingController _nameController = TextEditingController();
 
   /// Get the universe with the given id
   Future<Universe> _getUniverse(int universeId) async {
@@ -71,41 +69,15 @@ class _UniverseDetailViewState extends State<UniverseDetailView> {
         ));
   }
 
-  Column _displayEditionInputFields() {
-    // Display all input fields as a column
-    return Column(
-      children: [
-        Input(
-          controller: _nameController,
-          hintText: "Nom de l'univers",
-          isPassword: false,
-        ),
-        const SizedBox(height: 16),
-        Button(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _updateUniverse(_universe!.id!, {"name": _nameController.text});
-            },
-            text: "Modifier les informations")
-      ],
-    );
-  }
-
-  Dialog _displayProfileEditionDialog() {
+  Widget _displayProfileEditionDialog() {
     // Return the content of the bottom sheet modal when editing the universe name
-    return Dialog(
-      insetPadding: const EdgeInsets.all(10),
-      alignment: Alignment.bottomCenter,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(30)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Container(width: double.infinity, color: Colors.white, child: _displayEditionInputFields()),
-        ),
-      ),
-    );
+    return TextInputModal(
+        buttonText: "Modifier le nom de l'univers",
+        hintText: "Nouveau nom",
+        value: _universe!.name,
+        onConfirm: (String value) async {
+          await _updateUniverse(_universe!.id!, {"name": value});
+        });
   }
 
   Widget _displayEditInfoButton() {
@@ -169,7 +141,6 @@ class _UniverseDetailViewState extends State<UniverseDetailView> {
   Future<void> _loadUniverse(int universeId) async {
     // Load the universe object that will be displayed on this view
     Universe universe = await _getUniverse(universeId);
-    _nameController.text = universe.name;
     setState(() => _universe = universe);
   }
 

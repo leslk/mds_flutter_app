@@ -3,6 +3,7 @@ import 'package:mds_flutter_app/common/button.dart';
 import 'package:mds_flutter_app/common/input.dart';
 import 'package:mds_flutter_app/common/main_title.dart';
 import 'package:mds_flutter_app/models/user.dart';
+import 'package:mds_flutter_app/views/login_checker_view.dart';
 
 /// The view for the signup page
 /// The user can signup with his pseudo, name, firstname, email and password
@@ -14,13 +15,35 @@ class SignupView extends StatefulWidget {
 }
 
 class _SignupViewState extends State<SignupView> {
-  final TextEditingController _pseudoController = TextEditingController();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _firstNameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
+  late TextEditingController _pseudoController;
+  late TextEditingController _nameController;
+  late TextEditingController _firstNameController;
+  late TextEditingController _passwordController;
+  late TextEditingController _confirmPasswordController;
+  late TextEditingController _emailController;
   String _signupErrorMesssage = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _pseudoController = TextEditingController();
+    _nameController = TextEditingController();
+    _firstNameController = TextEditingController();
+    _passwordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+    _emailController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _pseudoController.dispose();
+    _nameController.dispose();
+    _firstNameController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
 
   Future<void> _signup() async {
     try {
@@ -31,6 +54,11 @@ class _SignupViewState extends State<SignupView> {
         _emailController.text,
         _passwordController.text,
       );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Inscription réussie", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+        backgroundColor: Colors.green,
+      ));
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const LoginCheckerView()));
     } catch (e) {
       setState(() {
         _signupErrorMesssage = e.toString().split("Exception: ")[1];

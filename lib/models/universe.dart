@@ -48,10 +48,6 @@ class Universe {
     return await HttpService().updateUniverse(id, universeData);
   }
 
-  static Future<String> deleteUniverse(int id) async {
-    return await HttpService().deleteUniverse(id);
-  }
-
   static Future<Universe> createUniverse(Map universeData) async {
     return await HttpService().createUniverse(universeData);
   }

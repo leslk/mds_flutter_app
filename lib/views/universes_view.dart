@@ -4,7 +4,7 @@ import 'package:mds_flutter_app/models/universe.dart';
 import 'package:mds_flutter_app/common/input.dart';
 import 'package:mds_flutter_app/main.dart';
 import 'package:mds_flutter_app/services/http_service.dart';
-import 'package:mds_flutter_app/common/button.dart';
+import 'package:mds_flutter_app/common/text_input_modal.dart';
 
 /// View that displays the list of universes
 /// It allows to create a universe and to search for a universe
@@ -15,14 +15,15 @@ class UniversesView extends StatefulWidget {
 }
 
 class _UniversesViewState extends State<UniversesView> {
-  final TextEditingController _searchController = TextEditingController();
   bool _isLoading = false;
+  late TextEditingController _searchController;
   final HttpService httpService = HttpService();
 
   /// At the initialization set the listener to the search controller
   @override
   void initState() {
     super.initState();
+    _searchController = TextEditingController();
     _searchController.addListener(() => setState(() {}));
   }
 
@@ -62,12 +63,12 @@ class _UniversesViewState extends State<UniversesView> {
   List<Universe> _getFilteredUniverses(List<Universe> universes) {
     String query = _searchController.text.toLowerCase();
     if (query.isEmpty) {
-      return universes.toList()..sort((a, b) => a.name.compareTo(b.name));
+      return universes.toList()..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     } else {
       return universes.where((universe) {
         return universe.name.toLowerCase().contains(query);
       }).toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
       // sort universes by name
     }
   }
@@ -114,36 +115,23 @@ class _UniversesViewState extends State<UniversesView> {
       child: ListTile(
         leading: _displayUniverseImage(universe),
         title: Text(universe.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        onTap: () {
-          Navigator.pushNamed(arguments: universe.id, context, '/universes/:id');
+        onTap: () async {
+          await Navigator.pushNamed(arguments: universe.id, context, '/universes/:id');
+          setState(() {});
         },
       ),
     );
   }
 
   /// Display the dialog to create a universe
-  Dialog _displayCreateUniverseDialog() {
-    final TextEditingController nameController = TextEditingController();
-    return Dialog(
-      insetPadding: const EdgeInsets.all(10),
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Input(controller: nameController, hintText: "Nom de l'univers", isPassword: false),
-            const SizedBox(height: 16),
-            Button(
-              text: "Créer l'univers",
-              onPressed: () async {
-                Navigator.pop(context);
-                await _createUniverse(nameController.text);
-              },
-            ),
-          ],
-        ),
-      ),
+  Widget _displayCreateUniverseDialog() {
+    return TextInputModal(
+      value: "",
+      hintText: "Nom de l'univers",
+      buttonText: "Créer l'univers",
+      onConfirm: (String value) {
+        _createUniverse(value);
+      },
     );
   }
 
